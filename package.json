@@ -1,0 +1,22 @@
+{
+  "name": "actual-budget-template",
+  "description": "A tool for applying a budget template to Actual",
+  "version": "0.0.1",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bdoherty/actual-budget-template.git"
+  },
+  "author": "Brendan Doherty",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bdoherty/actual-budget-template/issues"
+  },
+  "bin": "./index.js",
+  "homepage": "https://github.com/bdoherty/actual-budget-template",
+  "dependencies": {
+    "@actual-app/api": "^1.1.3",
+    "colors": "^1.4.0",
+    "date-fns": "^2.25.0"
+  }
+}
