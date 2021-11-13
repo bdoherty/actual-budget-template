@@ -110,10 +110,10 @@ async function applyTemplate(category, template, month) {
             let target_month = new Date(`${template.month}-01`);
             let current_month = new Date(`${month}-01`);
             let target = actual.utils.amountToInteger(template.amount);
-            let num_months = d.differenceInMonths(target_month, current_month);
+            let num_months = d.differenceInCalendarMonths(target_month, current_month);
             while(num_months < 0 && template.repeat) {
                 target_month = d.addMonths(target_month, template.repeat);
-                num_months = d.differenceInMonths(target_month, current_month);
+                num_months = d.differenceInCalendarMonths(target_month, current_month);
             }
             if(num_months < 0) {
                 console.log(`${category.name}: ${colors.yellow(`${template.month} is in the past:`)} ${colors.cyan(template.line)}`);
@@ -132,7 +132,7 @@ async function applyTemplate(category, template, month) {
             let current_month = new Date(`${month}-01`);
             let already_budgeted;
             let first_month = true;
-            for(let month = from_month; d.differenceInMonths(current_month, month) > 0; month = d.addMonths(month, 1)) {
+            for(let month = from_month; d.differenceInCalendarMonths(current_month, month) > 0; month = d.addMonths(month, 1)) {
                 let budget = await getBudgetMonth(d.format(month, 'yyyy-MM'));
                 for(var g = 0; g < budget.categoryGroups.length; g++) {
                     if(category.group_id == budget.categoryGroups[g].id) {
@@ -151,7 +151,7 @@ async function applyTemplate(category, template, month) {
                     }
                 }
             }
-            let num_months = d.differenceInMonths(to_month, current_month);
+            let num_months = d.differenceInCalendarMonths(to_month, current_month);
             let target = actual.utils.amountToInteger(template.amount);
             if(num_months < 0) {
                 console.log(`${category.name}: ${colors.yellow(`${template.to} is in the past:`)} ${colors.cyan(template.line)}`);
