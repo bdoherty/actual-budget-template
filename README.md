@@ -21,7 +21,8 @@ Create a template by adding a note to a category and adding a line that begins w
 | ```#template $50``` | Budget $50 each month | Regular monthly bills, such as internet |
 | ```#template up to $150``` | Budget up to $150 each month | Variable expenses, such as petrol and groceries |
 | ```#template $50 up to $300``` | Budget $50 each month up to a maximum of $300 | Funding rainy day categories, such as replacement shoes and bicycle repairs |
-| ```#template $500 by 2022‑03``` | Break down large, less-frequent expenses  into manageable monthly expenses | Annual insurance premium, saving for a replacement car in a few years |
+| ```#template $500 by 2022‑03``` | Break down large, less-frequent expenses into manageable monthly expenses | Annual insurance premium, saving for a replacement car in a few years |
+| ```#template $500 by 2021‑12 spend from 2021-03``` | Budget $500 by December. Any spending between March and December is OK. | Christmas presents, overseas holiday, or any other expenses that I will be partially paying for before the target period ends. |
 
 
 
