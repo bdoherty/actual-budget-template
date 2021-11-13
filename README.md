@@ -20,7 +20,8 @@ Create a template by adding a note to a category and adding a line that begins w
 | ------ | --- | --- |
 | ```#template $50``` | Budget $50 each month | Regular monthly bills, such as internet |
 | ```#template up to $150``` | Budget up to $150 each month | Variable expenses, such as petrol and groceries |
-| ```#template $50 up to $300``` | Budget $50 each month up to a maximum of $300 | Funding rainy day categories, such as replacement shoes and cellphone |
+| ```#template $50 up to $300``` | Budget $50 each month up to a maximum of $300 | Funding rainy day categories, such as replacement shoes and bicycle repairs |
+| ```#template $500 by 2022‑03``` | Break down large, less-frequent expenses  into manageable monthly expenses | Annual insurance premium, saving for a replacement car in a few years |
 
 
 
@@ -28,8 +29,8 @@ Create a template by adding a note to a category and adding a line that begins w
 ### Notes
 * $ sign is optional, ```#template $50``` and ```#template 50``` are the same.
 * Other currency symbols are not supported.
-* Number formats that use comma for the decimal seperator are not supported (eg, 123,45). You must use 123.45.
-* Commas are not supported for
+* Number formats that use comma for the decimal seperator are not supported (eg, ```123,45```). You must use ```123.45```.
+* Thousands separators are not supported (eg, ```1,234```).  You must use ```1234```.
 
 ## Prerequisites
 * Actual
