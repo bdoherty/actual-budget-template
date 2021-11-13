@@ -14,14 +14,19 @@ This utility uses the [Actual API](https://actualbudget.com/docs/developers/usin
 
 ## Template
 
-Create a template by adding a note to a category and adding a line that begins with ```#template```.  You are welcome to have other lines in your note, but the ```#template``` line must match the syntax.
+Create a template by adding a note to a category and adding a line that begins with ```#template```.  
+
+![category_note](https://user-images.githubusercontent.com/335468/141658974-1fb72d02-d30d-4c24-826a-eb2574e360d5.png)
+
+You are welcome to have other lines in your note, but the ```#template``` line must match the syntax.
 
 | Syntax | Description | How I use this |
 | ------ | --- | --- |
 | ```#template $50``` | Budget $50 each month | Regular monthly bills, such as internet |
 | ```#template up to $150``` | Budget up to $150 each month | Variable expenses, such as petrol and groceries |
 | ```#template $50 up to $300``` | Budget $50 each month up to a maximum of $300 | Funding rainy day categories, such as replacement shoes and bicycle repairs |
-| ```#template $500 by 2022‑03``` | Break down large, less-frequent expenses  into manageable monthly expenses | Annual insurance premium, saving for a replacement car in a few years |
+| ```#template $500 by 2022‑03``` | Break down large, less-frequent expenses into manageable monthly expenses | Annual insurance premium, saving for a replacement car in a few years |
+| ```#template $500 by 2021‑12 spend from 2021-03``` | Budget $500 by December. Any spending between March and December is OK. | Christmas presents, overseas holiday, or any other expenses that I will be partially paying for before the target period ends. |
 
 
 
