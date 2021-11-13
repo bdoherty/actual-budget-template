@@ -13,7 +13,7 @@ if(!process.argv[2]) {
 actual.runWithBudget(process.argv[2], run);
 
 async function run() {
-
+    
     let month = (/\d{4}\-\d{2}/.exec(process.argv[3]) || [])[0] || d.format(new Date(), 'yyyy-MM');
     
     let category_notes = await getCategoryNotes();
@@ -26,7 +26,7 @@ async function run() {
             if(category.budgeted == 0 || force) {
                 let template = category_notes[category.id];
                 if(template) {
-                    let to_budget = applyTemplate(category, template, month);
+                    let to_budget = await applyTemplate(category, template, month);
                     if(to_budget != null) {
                         num_applied++;
                         if(!preview) {
@@ -56,6 +56,7 @@ async function getCategoryNotes() {
         { type: 'simple', re: /^#template up to \$?(\d+(\.\d{2})?)$/im, params: ['limit'] },
         { type: 'simple', re: /^#template \$?(\d+(\.\d{2})?) up to \$?(\d+(\.\d{2})?)$/im, params: ['monthly', null, 'limit'] },
         { type: 'by', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2})$/im, params: ['amount', null, 'month'] },
+        { type: 'spend', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2}) spend from (\d{4}\-\d{2})$/im, params: ['amount', null, 'to', 'from'] },
         { type: 'error', re: /^#template .*$/im, params: []}
     ] ;
 
@@ -84,7 +85,7 @@ async function getCategoryNotes() {
     return notes;
 }
 
-function applyTemplate(category, template, month) {
+async function applyTemplate(category, template, month) {
     const balance = category.balance - category.spent - category.budgeted;
     let to_budget;
     switch(template.type) {
@@ -103,11 +104,11 @@ function applyTemplate(category, template, month) {
                 to_budget = limit - balance;
             }
             break;
-        case 'by':
+        case 'by': {
             // by has 'amount' and 'month' params
-            let targetMonth = new Date(`${template.month}-01`);
-            let currentMonth = new Date(`${month}-01`);
-            let num_months = d.differenceInMonths(targetMonth, currentMonth);
+            let target_month = new Date(`${template.month}-01`);
+            let current_month = new Date(`${month}-01`);
+            let num_months = d.differenceInMonths(target_month, current_month);
             let target = actual.utils.amountToInteger(template.amount);
             if(num_months < 0) {
                 console.log(`${category.name}: ${colors.yellow(`${template.month} is in the past:`)} ${colors.cyan(template.line)}`);
@@ -118,6 +119,45 @@ function applyTemplate(category, template, month) {
                 to_budget = Math.round((target - balance) / (num_months + 1));
             }
             break;
+        }
+        case 'spend': {
+            // by has 'amount' and 'from' and 'to' params
+            let from_month = new Date(`${template.from}-01`);
+            let to_month = new Date(`${template.to}-01`);
+            let current_month = new Date(`${month}-01`);
+            let already_budgeted;
+            let first_month = true;
+            for(let month = from_month; d.differenceInMonths(current_month, month) > 0; month = d.addMonths(month, 1)) {
+                let budget = await getBudgetMonth(d.format(month, 'yyyy-MM'));
+                for(var g = 0; g < budget.categoryGroups.length; g++) {
+                    if(category.group_id == budget.categoryGroups[g].id) {
+                        for(var c = 0; c < budget.categoryGroups[g].categories.length; c++)
+                        if(category.id == budget.categoryGroups[g].categories[c].id) {
+                            let month_category = budget.categoryGroups[g].categories[c]; 
+                            if(first_month) {
+                                already_budgeted = month_category.balance - month_category.spent;
+                                first_month = false;
+                            } else {
+                                already_budgeted += month_category.budgeted;
+                            }
+                            break;
+                        }
+                        break;
+                    }
+                }
+            }
+            let num_months = d.differenceInMonths(to_month, current_month);
+            let target = actual.utils.amountToInteger(template.amount);
+            if(num_months < 0) {
+                console.log(`${category.name}: ${colors.yellow(`${template.to} is in the past:`)} ${colors.cyan(template.line)}`);
+                return null;
+            } else if (num_months == 0) { 
+                to_budget = target - already_budgeted;
+            } else {
+                to_budget = Math.round((target - already_budgeted) / (num_months + 1));
+            }
+            break;
+        }
         case 'error':
             console.log(`${category.name}: ${colors.red(`Failed to match:`)} ${colors.cyan(template.line)}`);
             return null;
