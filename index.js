@@ -56,6 +56,7 @@ async function getCategoryNotes() {
         { type: 'simple', re: /^#template up to \$?(\d+(\.\d{2})?)$/im, params: ['limit'] },
         { type: 'simple', re: /^#template \$?(\d+(\.\d{2})?) up to \$?(\d+(\.\d{2})?)$/im, params: ['monthly', null, 'limit'] },
         { type: 'by', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2})$/im, params: ['amount', null, 'month'] },
+        { type: 'by', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2}) repeat every (\d+) months$/im, params: ['amount', null, 'month', 'repeat'] },
         { type: 'spend', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2}) spend from (\d{4}\-\d{2})$/im, params: ['amount', null, 'to', 'from'] },
         { type: 'error', re: /^#template .*$/im, params: []}
     ] ;
@@ -108,8 +109,12 @@ async function applyTemplate(category, template, month) {
             // by has 'amount' and 'month' params
             let target_month = new Date(`${template.month}-01`);
             let current_month = new Date(`${month}-01`);
-            let num_months = d.differenceInMonths(target_month, current_month);
             let target = actual.utils.amountToInteger(template.amount);
+            let num_months = d.differenceInMonths(target_month, current_month);
+            while(num_months < 0 && template.repeat) {
+                target_month = d.addMonths(target_month, template.repeat);
+                num_months = d.differenceInMonths(target_month, current_month);
+            }
             if(num_months < 0) {
                 console.log(`${category.name}: ${colors.yellow(`${template.month} is in the past:`)} ${colors.cyan(template.line)}`);
                 return null;
