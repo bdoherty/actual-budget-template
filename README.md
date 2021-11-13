@@ -14,7 +14,11 @@ This utility uses the [Actual API](https://actualbudget.com/docs/developers/usin
 
 ## Template
 
-Create a template by adding a note to a category and adding a line that begins with ```#template```.  You are welcome to have other lines in your note, but the ```#template``` line must match the syntax.
+Create a template by adding a note to a category and adding a line that begins with ```#template```.  
+
+![category_note](https://user-images.githubusercontent.com/335468/141658974-1fb72d02-d30d-4c24-826a-eb2574e360d5.png)
+
+You are welcome to have other lines in your note, but the ```#template``` line must match the syntax.
 
 | Syntax | Description | How I use this |
 | ------ | --- | --- |
