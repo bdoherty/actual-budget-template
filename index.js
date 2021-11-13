@@ -123,7 +123,9 @@ function applyTemplate(category, template, month) {
             return null;
     }
 
-    if(category.budgeted == to_budget && !force) {
+    if((category.budgeted != 0 || to_budget == 0) && !force) {
+        return null;
+    } else if(category.budgeted == to_budget && force) {
         return null;
     } else {
         console.log(`${category.name}: ${actual.utils.integerToAmount(balance)} + ${colors.green(actual.utils.integerToAmount(to_budget))} = ${actual.utils.integerToAmount(balance + to_budget)} ${colors.cyan(template.line)}`);
