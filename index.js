@@ -122,10 +122,11 @@ async function applyTemplate(category, template, month) {
             if(num_months < 0) {
                 console.log(`${category.name}: ${colors.yellow(`${template.month} is in the past:`)} ${colors.cyan(template.line)}`);
                 return null;
-            } else if (num_months == 0) { 
-                to_budget = target - balance;
             } else {
-                to_budget = Math.round((target - balance) / (num_months + 1));
+                to_budget = target - balance;
+                if (num_months > 0 && to_budget > 0) { 
+                    to_budget = Math.round(to_budget / (num_months + 1));
+                }
             }
             break;
         }
