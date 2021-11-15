@@ -52,7 +52,7 @@ async function run() {
 async function getCategoryNotes() {
 
     const matches = [
-        { type: 'simple', re: /^#template \$?(\d+(\.\d{2})?)$/im, params: ['monthly'] },
+        { type: 'simple', re: /^#template \$?(\-?\d+(\.\d{2})?)$/im, params: ['monthly'] },
         { type: 'simple', re: /^#template up to \$?(\d+(\.\d{2})?)$/im, params: ['limit'] },
         { type: 'simple', re: /^#template \$?(\d+(\.\d{2})?) up to \$?(\d+(\.\d{2})?)$/im, params: ['monthly', null, 'limit'] },
         { type: 'by', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2})$/im, params: ['amount', null, 'month'] },
@@ -61,7 +61,7 @@ async function getCategoryNotes() {
         { type: 'by_annual', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2}) repeat every (\d+) years$/im, params: ['amount', null, 'month', 'repeat'] },
         { type: 'spend', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2}) spend from (\d{4}\-\d{2})$/im, params: ['amount', null, 'to', 'from'] },
         { type: 'error', re: /^#template .*$/im, params: []}
-    ] ;
+    ];
 
     let results = await actual.runQuery(actual.q('notes').filter({ note: { $like: '%#template%'}}).select('*'));
     let notes = {};
