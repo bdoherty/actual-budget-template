@@ -7,7 +7,7 @@ node index.js <budget-id> [month] [--preview] [--force]
 ```
 * **budget-id** You can find your budget id in the "Advanced" section of the settings page. 
 * **month** The month in yyyy-MM format that you want to apply the budget template to.  Defaults to the current month.
-* **--preview** Displays a preview of what changes will be made, without doing any updates.
+* **--preview** Displays a preview of what changes will be made, without making any updates.
 * **--force** Applies to the budget template to all categories, even those with a *Budgeted* value.  Can be combined with *--preview*.
 
 This utility uses the [Actual API](https://actualbudget.com/docs/developers/using-the-API/). Currently, the API requires Actual must be running locally beore you can apply a budget template.
