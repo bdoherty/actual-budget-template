@@ -57,6 +57,10 @@ async function getCategoryNotes() {
         { type: 'simple', re: /^#template \$?(\d+(\.\d{2})?) up to \$?(\d+(\.\d{2})?)$/im, params: ['monthly', null, 'limit'] },
         { type: 'by', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2})$/im, params: ['amount', null, 'month'] },
         { type: 'by', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2}) repeat every (\d+) months$/im, params: ['amount', null, 'month', 'repeat'] },
+        { type: 'week', re: /^#template \$?(\d+(\.\d{2})?) repeat every week starting (\d{4}\-\d{2}\-\d{2})$/im, params: ['amount', null, 'starting'] },
+        { type: 'week', re: /^#template \$?(\d+(\.\d{2})?) repeat every week starting (\d{4}\-\d{2}\-\d{2}) up to \$?(\d+(\.\d{2})?)$/im, params: ['amount', null, 'starting', 'limit'] },
+        { type: 'weeks', re: /^#template \$?(\d+(\.\d{2})?) repeat every (\d+) weeks starting (\d{4}\-\d{2}\-\d{2})$/im, params: ['amount', null, 'weeks', 'starting'] },
+        { type: 'weeks', re: /^#template \$?(\d+(\.\d{2})?) repeat every (\d+) weeks starting (\d{4}\-\d{2}\-\d{2}) up to \$?(\d+(\.\d{2})?)$/im, params: ['amount', null, 'weeks', 'starting', 'limit'] },
         { type: 'by_annual', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2}) repeat every year$/im, params: ['amount', null, 'month'] },
         { type: 'by_annual', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2}) repeat every (\d+) years$/im, params: ['amount', null, 'month', 'repeat'] },
         { type: 'spend', re: /^#template \$?(\d+(\.\d{2})?) by (\d{4}\-\d{2}) spend from (\d{4}\-\d{2})$/im, params: ['amount', null, 'to', 'from'] },
@@ -92,7 +96,7 @@ async function applyTemplate(category, template, month) {
     const balance = category.balance - category.spent - category.budgeted;
     let to_budget;
     switch(template.type) {
-        case 'simple':
+        case 'simple': {
             // simple has 'monthly' and/or 'limit' params
             let limit = template.limit != null ? actual.utils.amountToInteger(template.limit) : null;
             if(template.monthly) {
@@ -107,6 +111,7 @@ async function applyTemplate(category, template, month) {
                 to_budget = limit - balance;
             }
             break;
+        }
         case 'by': 
         case 'by_annual': {
             // by has 'amount' and 'month' params
@@ -130,8 +135,35 @@ async function applyTemplate(category, template, month) {
             }
             break;
         }
+        case 'week':
+        case 'weeks': {
+            // weeks has 'amount', 'starting' and optional 'limit' params
+            // weeks has 'amount', 'starting', 'weeks' and optional 'limit' params
+            let amount = actual.utils.amountToInteger(template.amount);
+            let weeks = template.weeks != null ? Math.round(template.weeks) : 1;
+            let limit = template.limit != null ? actual.utils.amountToInteger(template.limit) : null;
+            let w = new Date(template.starting);
+
+            let current_month = new Date(`${month}-01`);
+            let next_month = d.addMonths(current_month, 1)
+
+            to_budget = 0;
+            while(w.getTime() < next_month.getTime()) {
+                if(w.getTime() >= current_month.getTime()) {
+                    to_budget += amount;
+                }
+                w = d.addWeeks(w, weeks)
+            }            
+
+            if(limit != null) {
+                if(to_budget + balance > limit) {
+                    to_budget = limit - balance;
+                }
+            }
+            break;
+        }
         case 'spend': {
-            // by has 'amount' and 'from' and 'to' params
+            // spend has 'amount' and 'from' and 'to' params
             let from_month = new Date(`${template.from}-01`);
             let to_month = new Date(`${template.to}-01`);
             let current_month = new Date(`${month}-01`);
