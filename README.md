@@ -30,6 +30,10 @@ You are welcome to have other lines in your note, but the ```#template``` line m
 | ```#template $500 by 2021-03 repeat every year``` | Break down large, less-frequent expenses into manageable monthly expenses | Annual insurance premium |
 | ```#template $500 by 2021-03 repeat every 2 years``` | Break down large, less-frequent expenses into manageable monthly expenses | Domain name renewal |
 | ```#template $500 by 2021-12 spend from 2021-03``` | Budget $500 by December. Any spending between March and December is OK. | Christmas presents, overseas holiday, or any other expenses that I will be partially paying for before the target period ends. |
+| ```#template $10 repeat every week starting 2022-01-03``` |  |  |
+| ```#template $10 repeat every week starting 2022-01-03 up to 80``` |  |  |
+| ```#template $10 repeat every 2 weeks starting 2022-01-04``` |  |  |
+| ```#template $10 repeat every 9 weeks starting 2022-01-04 up to 30``` |  |  |
 
 
 
