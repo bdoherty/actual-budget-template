@@ -62,7 +62,7 @@ Alternatively you can create a new folder, and then run the following command wi
 npm i --prefix ./ bdoherty/actual-budget-template
 ```
 
-You should then be able to run `actual-budget-template` from command prompt / Terminal from this folder.
+You should then be able to run `actual-budget-template` from command prompt / Terminal from this folder.  If you want to upgrade the utility to the latest version, just run the above command from the same folder.
 
 
 # Buy Me A Coffee! :coffee:
