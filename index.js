@@ -8,7 +8,7 @@ let budgets = {};
 let force = process.argv.indexOf('--force') > 0;
 let preview = process.argv.indexOf('--preview') > 0;
 if(!process.argv[2]) {
-    console.log(colors.red('node index.js budget-id [yyyy-mm] [--force]'));
+    console.log(colors.red('node index.js budget-id [yyyy-mm] [--force] [--preview]'));
     return;
 }
 
