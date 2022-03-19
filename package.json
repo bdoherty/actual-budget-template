@@ -1,7 +1,7 @@
 {
   "name": "actual-budget-template",
   "description": "A tool for applying a budget template to Actual",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -12,8 +12,8 @@
   "bugs": {
     "url": "https://github.com/bdoherty/actual-budget-template/issues"
   },
-  "scripts": {
-    "actual-budget-template": "node index.js"
+  "bin": {
+    "actual-budget-template": "./index.js"
   },
   "homepage": "https://github.com/bdoherty/actual-budget-template",
   "dependencies": {

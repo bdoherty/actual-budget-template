@@ -3,7 +3,7 @@ Command line utility for applying a budget template to [ActualBudget](https://ac
 
 ## Synopsis
 ```
-node index.js <budget-id> [month] [--preview] [--force]
+actual-budget-template <budget-id> [month] [--preview] [--force]
 ```
 * **budget-id** You can find your budget id in the "Advanced" section of the settings page. 
 * **month** The month in yyyy-MM format that you want to apply the budget template to.  Defaults to the current month.
@@ -49,7 +49,21 @@ You are welcome to have other lines in your note, but the ```#template``` line m
 * Node
 
 ## How to get started.
-Before you first run this tool, you'll need to run ```npm install``` to install the dependencies.
+
+You can run this utility without installing it by running the following command.  This about 20 seconds slower to run, as it downloads the software each time.  As a benefit, you will always be using the latest version.
+
+```
+npx bdoherty/actual-budget-template <budget-id>  [month] [--preview] [--force]
+```
+
+Alternatively you can create a new folder, and then run the following command within that folder from command prompt (on Windows) or Terminal (on Mac) to install the utility.  The utility will run faster, as it doesn't need to download the software each time it runs.
+
+```
+npm i --prefix ./ bdoherty/actual-budget-template
+```
+
+You should then be able to run `actual-budget-template` from command prompt / Terminal from this folder.  If you want to upgrade the utility to the latest version, just run the above command from the same folder.
+
 
 # Buy Me A Coffee! :coffee:
 
