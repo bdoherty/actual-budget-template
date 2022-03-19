@@ -1,7 +1,7 @@
 {
   "name": "actual-budget-template",
   "description": "A tool for applying a budget template to Actual",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "index.js",
   "repository": {
     "type": "git",
