@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const actual = require('@actual-app/api');
 const colors = require('colors/safe');
 const d = require('date-fns');
