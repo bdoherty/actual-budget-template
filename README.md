@@ -3,6 +3,7 @@ Command line utility for applying a budget template to [ActualBudget](https://ac
 
 ## Synopsis
 ```
+npx bdoherty/actual-budget-template <budget-id>  [month] [--preview] [--force]
 actual-budget-template <budget-id> [month] [--preview] [--force]
 ```
 * **budget-id** You can find your budget id in the "Advanced" section of the settings page. 
@@ -10,7 +11,7 @@ actual-budget-template <budget-id> [month] [--preview] [--force]
 * **--preview** Displays a preview of what changes will be made, without making any updates.
 * **--force** Applies to the budget template to all categories, even those with a *Budgeted* value.  Can be combined with *--preview*.
 
-This utility uses the [Actual API](https://actualbudget.com/docs/developers/using-the-API/). Currently, the API requires Actual must be running locally beore you can apply a budget template.
+This utility uses the [Actual API](https://actualbudget.com/docs/developers/using-the-API/). Currently, the API requires Actual must be running locally before you can apply a budget template.
 
 ## Template
 
