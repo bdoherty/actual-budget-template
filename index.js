@@ -118,6 +118,7 @@ async function applyTemplate(category, template_lines, month, getBudgetMonthTest
         switch(template.type) {
             case 'by':
             case 'by_annual':
+            case 'spend':
                 let target_month = new Date(`${template.month}-01`);
                 let num_months = differenceInCalendarMonths(target_month, current_month);
                 let repeat = template.type == 'by' ? template.repeat : (template.repeat || 1) * 12;
@@ -225,11 +226,6 @@ async function applyTemplate(category, template_lines, month, getBudgetMonthTest
                 break;
             }
             case 'spend': {
-                if(template_lines.length > 1) {
-                    console.log(`${category.name}: ${colors.red(`Multiple #template lines are not supported with 'spend from'`)} ${colors.cyan(template.line)}`);
-                    return null;
-                }
-
                 // spend has 'amount' and 'from' and 'to' params
                 let from_month = new Date(`${template.from}-01`);
                 let to_month = new Date(`${template.to}-01`);
@@ -528,6 +524,19 @@ async function runTests() {
     test(template, 10000, await applyTemplate({ id: 'my-cat', name: 'my-cat', balance: 40000, spent: 0, budgeted: 0 }, parsed['1'], '2021-05', getBudgetMonthTestFunc) );
     test(template, 10000, await applyTemplate({ id: 'my-cat', name: 'my-cat', balance: 50000, spent: 0, budgeted: 0 }, parsed['1'], '2021-06', getBudgetMonthTestFunc) );
     test(template, 10000, await applyTemplate({ id: 'my-cat', name: 'my-cat', balance: 60000, spent: 0, budgeted: 0 }, parsed['1'], '2021-07', getBudgetMonthTestFunc) );
+
+    template = '#template $600 by 2020-12 spend from 2020-03\n#template $1200 by 2021-12 spend from 2021-03';
+    parsed = {"1":[{"line":"#template $600 by 2020-12 spend from 2020-03","type":"spend","amount":"600","to":"2020-12","from":"2020-03"},
+        {"line":"#template $1200 by 2021-12 spend from 2021-03","type":"spend","amount":"1200","to":"2021-12","from":"2021-03"}]};
+    test(template, 
+        parsed,
+        await getCategoryTemplates([{ id: '1', note: template }])
+    );
+    test(template, 10000, await applyTemplate({ id: 'my-cat', name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2021-01', () => {debugger} ) );
+    test(template, 10000, await applyTemplate({ id: 'my-cat', name: 'my-cat', balance: 10000, spent: 0, budgeted: 0 }, parsed['1'], '2021-02', () => {debugger}) );
+    test(template, 10000, await applyTemplate({ id: 'my-cat', name: 'my-cat', balance: 20000, spent: 0, budgeted: 0 }, parsed['1'], '2021-03', getBudgetMonthTestFunc) );
+    test(template, 10000, await applyTemplate({ id: 'my-cat', name: 'my-cat', balance: 30000, spent: 0, budgeted: 0 }, parsed['1'], '2021-04', getBudgetMonthTestFunc) );
+
 
     template = '#template $1200 by 2021-12 spend from 2021-03';
     parsed = {"1":[{"line":"#template $1200 by 2021-12 spend from 2021-03","type":"spend","amount":"1200","to":"2021-12","from":"2021-03"}]};
