@@ -106,8 +106,57 @@ async function getCategoryTemplates(notes) {
     return templates;
 }
 
+
 async function applyTemplate(category, template_lines, month, getBudgetMonthTestFunc = null) {
+
+    let current_month = new Date(`${month}-01`);
+
+    // remove lines for past dates, calculate repeating dates
+    let got_by = false;
+    template_lines = template_lines.filter((template) => {
+
+        switch(template.type) {
+            case 'by':
+            case 'by_annual':
+                let target_month = new Date(`${template.month}-01`);
+                let num_months = differenceInCalendarMonths(target_month, current_month);
+                let repeat = template.type == 'by' ? template.repeat : (template.repeat || 1) * 12;
+                while(num_months < 0 && repeat) {
+                    target_month = addMonths(target_month, repeat);
+                    num_months = differenceInCalendarMonths(target_month, current_month);
+                }
+                if(num_months < 0) {
+                    console.log(`${category.name}: ${colors.yellow(`${template.month} is in the past:`)} ${colors.cyan(template.line)}`);
+                    return null;
+                }
+                template.month = format(target_month, 'yyyy-MM');    
+        }
+        return template;
+    });
+ 
+    if(template_lines.length > 1) {
+        template_lines = template_lines.sort((a,b) => {
+            if(a.type.slice(0, 2) == b.type.slice(0,2) && a.type.slice(0, 2) == 'by') {
+                return differenceInCalendarMonths(new Date(`${a.month}-01`), new Date(`${b.month}-01`));
+            } else {
+                return a.type.localeCompare(b.type);
+            }        
+        }).filter((el) => {
+            if(el.type.slice(0, 2) == 'by') {
+                if(!got_by) {   
+                    got_by = true;
+                    return el;
+                } else {
+                    return null;
+                }
+            } else {
+                return el;
+            }
+        });    
+    }
+    
     let to_budget = 0;
+    let over_budget = 0;
     let limit;
     let last_month_balance = category.balance - category.spent - category.budgeted;
     for(let l = 0; l < template_lines.length; l++) {
@@ -135,7 +184,6 @@ async function applyTemplate(category, template_lines, month, getBudgetMonthTest
             case 'by_annual': {
                 // by has 'amount' and 'month' params
                 let target_month = new Date(`${template.month}-01`);
-                let current_month = new Date(`${month}-01`);
                 let target = actual.utils.amountToInteger(template.amount);
                 let num_months = differenceInCalendarMonths(target_month, current_month);
                 let repeat = template.type == 'by' ? template.repeat : (template.repeat || 1) * 12;
@@ -143,14 +191,9 @@ async function applyTemplate(category, template_lines, month, getBudgetMonthTest
                     target_month = addMonths(target_month, repeat);
                     num_months = differenceInCalendarMonths(target_month, current_month);
                 }
-                if(num_months < 0) {
-                    console.log(`${category.name}: ${colors.yellow(`${template.month} is in the past:`)} ${colors.cyan(template.line)}`);
-                    return null;
-                } else {
-                    to_budget = target - last_month_balance;
-                    if (num_months > 0 && to_budget > 0) { 
-                        to_budget = Math.round(to_budget / (num_months + 1));
-                    }
+                let diff = target - last_month_balance;
+                if (diff >= 0) { 
+                    to_budget += Math.round(diff / (num_months + 1));
                 }
                 break;
             }
@@ -170,7 +213,6 @@ async function applyTemplate(category, template_lines, month, getBudgetMonthTest
                 }
                 let w = new Date(template.starting);
 
-                let current_month = new Date(`${month}-01`);
                 let next_month = addMonths(current_month, 1)
 
                 to_budget = 0;
@@ -183,13 +225,16 @@ async function applyTemplate(category, template_lines, month, getBudgetMonthTest
                 break;
             }
             case 'spend': {
+                if(template_lines.length > 1) {
+                    console.log(`${category.name}: ${colors.red(`Multiple #template lines are not supported with 'spend from'`)} ${colors.cyan(template.line)}`);
+                    return null;
+                }
+
                 // spend has 'amount' and 'from' and 'to' params
                 let from_month = new Date(`${template.from}-01`);
                 let to_month = new Date(`${template.to}-01`);
-                let current_month = new Date(`${month}-01`);
                 let already_budgeted = last_month_balance;
                 let first_month = true;
-                ////console.log(month, category);
                 for(let m = from_month; differenceInCalendarMonths(current_month, m) > 0; m = addMonths(m, 1)) {
                     let func = (getBudgetMonthTestFunc || getBudgetMonth);
                     let budget = await func(format(m, 'yyyy-MM'));
@@ -198,14 +243,12 @@ async function applyTemplate(category, template_lines, month, getBudgetMonthTest
                             for(var c = 0; c < budget.categoryGroups[g].categories.length; c++)
                             if(category.id == budget.categoryGroups[g].categories[c].id) {
                                 let month_category = budget.categoryGroups[g].categories[c]; 
-                                ////console.log(m, month_category);
                                 if(first_month) {
                                     already_budgeted = month_category.balance - month_category.spent;
                                     first_month = false;
                                 } else {
                                     already_budgeted += month_category.budgeted;
                                 }
-                                ////console.log(`${month} already_budgeted: ${already_budgeted}`)
                                 break;
                             }
                             break;
@@ -338,6 +381,91 @@ async function runTests() {
     test(template, 3846, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-03') );
     test(template, 3077, await applyTemplate({ name: 'my-cat', balance: 10000, spent: 0, budgeted: 0 }, parsed['1'], '2022-03') );
 
+    template = '#template 20 by 2022-11 repeat every year\n#template 210 by 2022-07 repeat every year'
+    parsed = {
+        "1":[{"line":"#template 20 by 2022-11 repeat every year","type":"by_annual","amount":"20","month":"2022-11"},
+        {"line":"#template 210 by 2022-07 repeat every year","type":"by_annual","amount":"210","month":"2022-07"}]
+    };
+    test(template, 
+        parsed,
+        await getCategoryTemplates([{ id: '1', note: template }])
+    );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-01') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 3000, spent: 0, budgeted: 0 }, parsed['1'], '2022-02') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 6000, spent: 0, budgeted: 0 }, parsed['1'], '2022-03') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 9000, spent: 0, budgeted: 0 }, parsed['1'], '2022-04') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 12000, spent: 0, budgeted: 0 }, parsed['1'], '2022-05') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 15000, spent: 0, budgeted: 0 }, parsed['1'], '2022-06') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 18000, spent: 0, budgeted: 0 }, parsed['1'], '2022-07') );
+    test(template, 500, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-08') );
+    test(template, 500, await applyTemplate({ name: 'my-cat', balance: 500, spent: 0, budgeted: 0 }, parsed['1'], '2022-09') );
+    test(template, 500, await applyTemplate({ name: 'my-cat', balance: 1000, spent: 0, budgeted: 0 }, parsed['1'], '2022-10') );
+    test(template, 500, await applyTemplate({ name: 'my-cat', balance: 1500, spent: 0, budgeted: 0 }, parsed['1'], '2022-11') );
+    test(template, 2625, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-12') );
+    test(template, 2625, await applyTemplate({ name: 'my-cat', balance: 2625, spent: 0, budgeted: 0 }, parsed['1'], '2023-01') );
+
+    test(template, 2625, await applyTemplate({ name: 'my-cat', balance: 5250, spent: 0, budgeted: 0 }, parsed['1'], '2023-02') );
+    test(template, 2625, await applyTemplate({ name: 'my-cat', balance: 7875, spent: 0, budgeted: 0 }, parsed['1'], '2023-03') );
+    test(template, 2625, await applyTemplate({ name: 'my-cat', balance: 10500, spent: 0, budgeted: 0 }, parsed['1'], '2023-04') );
+    test(template, 2625, await applyTemplate({ name: 'my-cat', balance: 13125, spent: 0, budgeted: 0 }, parsed['1'], '2023-05') );
+    test(template, 2625, await applyTemplate({ name: 'my-cat', balance: 15750, spent: 0, budgeted: 0 }, parsed['1'], '2023-06') );
+    test(template, 2625, await applyTemplate({ name: 'my-cat', balance: 18375, spent: 0, budgeted: 0 }, parsed['1'], '2023-07') );
+    test(template, 500, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2023-08') );
+    test(template, 500, await applyTemplate({ name: 'my-cat', balance: 500, spent: 0, budgeted: 0 }, parsed['1'], '2023-09') );
+    test(template, 500, await applyTemplate({ name: 'my-cat', balance: 1000, spent: 0, budgeted: 0 }, parsed['1'], '2023-10') );
+    test(template, 500, await applyTemplate({ name: 'my-cat', balance: 1500, spent: 0, budgeted: 0 }, parsed['1'], '2023-11') );
+    test(template, 2625, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2023-12') );
+
+    template = `#template 20 by 2022-05 repeat every year
+#template 90 by 2022-01 repeat every year
+#template 90 by 2022-04 repeat every year
+#template 90 by 2022-08 repeat every year`
+    parsed = {"1":[{"line":"#template 20 by 2022-05 repeat every year","type":"by_annual","amount":"20","month":"2022-05"},
+    {"line":"#template 90 by 2022-01 repeat every year","type":"by_annual","amount":"90","month":"2022-01"},
+    {"line":"#template 90 by 2022-04 repeat every year","type":"by_annual","amount":"90","month":"2022-04"},
+    {"line":"#template 90 by 2022-08 repeat every year","type":"by_annual","amount":"90","month":"2022-08"}]};
+    test(template, 
+        parsed,
+        await getCategoryTemplates([{ id: '1', note: template }])
+    );
+    test(template, 9000, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-01') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-02') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 3000, spent: 0, budgeted: 0 }, parsed['1'], '2022-03') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 6000, spent: 0, budgeted: 0 }, parsed['1'], '2022-04') );
+    test(template, 2000, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-05') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-06') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 3000, spent: 0, budgeted: 0 }, parsed['1'], '2022-07') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 6000, spent: 0, budgeted: 0 }, parsed['1'], '2022-08') );
+    test(template, 1800, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-09') );
+    test(template, 1800, await applyTemplate({ name: 'my-cat', balance: 1800, spent: 0, budgeted: 0 }, parsed['1'], '2022-10') );
+    test(template, 1800, await applyTemplate({ name: 'my-cat', balance: 3600, spent: 0, budgeted: 0 }, parsed['1'], '2022-11') );
+    test(template, 1800, await applyTemplate({ name: 'my-cat', balance: 5400, spent: 0, budgeted: 0 }, parsed['1'], '2022-12') );
+    test(template, 1800, await applyTemplate({ name: 'my-cat', balance: 7200, spent: 0, budgeted: 0 }, parsed['1'], '2023-01') );
+
+    template = `#template 20 by 2022-05
+#template 90 by 2022-01
+#template 90 by 2022-04
+#template 90 by 2022-08`
+    parsed = {"1":[{"line":"#template 20 by 2022-05","type":"by","amount":"20","month":"2022-05"},
+    {"line":"#template 90 by 2022-01","type":"by","amount":"90","month":"2022-01"},
+    {"line":"#template 90 by 2022-04","type":"by","amount":"90","month":"2022-04"},
+    {"line":"#template 90 by 2022-08","type":"by","amount":"90","month":"2022-08"}]};
+    test(template, 
+        parsed,
+        await getCategoryTemplates([{ id: '1', note: template }])
+    );
+    test(template, 9000, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-01') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-02') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 3000, spent: 0, budgeted: 0 }, parsed['1'], '2022-03') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 6000, spent: 0, budgeted: 0 }, parsed['1'], '2022-04') );
+    test(template, 2000, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-05') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-06') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 3000, spent: 0, budgeted: 0 }, parsed['1'], '2022-07') );
+    test(template, 3000, await applyTemplate({ name: 'my-cat', balance: 6000, spent: 0, budgeted: 0 }, parsed['1'], '2022-08') );
+    test(template, null, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-09') );
+    test(template, null, await applyTemplate({ name: 'my-cat', balance: 0, spent: 0, budgeted: 0 }, parsed['1'], '2022-10') );
+
+
     template = '#template $10 repeat every week starting 2022-01-03';
     parsed = {"1":[{"line":"#template $10 repeat every week starting 2022-01-03","type":"week","amount":"10","starting":"2022-01-03"}]};
     test(template, 
@@ -451,6 +579,5 @@ function test(testName, expected, actual) {
         console.log(colors.red(`${testName}: Failed`));
         console.log(`          Expected: ${JSON.stringify(expected)}`)
         console.log(`            Actual: ${JSON.stringify(actual)}`)
-        debugger;
     }
 }
