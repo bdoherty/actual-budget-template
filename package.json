@@ -13,7 +13,7 @@
     "url": "https://github.com/bdoherty/actual-budget-template/issues"
   },
   "scripts": {
-    "actual-budget-template": "./index.js"
+    "actual-budget-template": "node index.js"
   },
   "bin": {
     "actual-budget-template": "./index.js"
