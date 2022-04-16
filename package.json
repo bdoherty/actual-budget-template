@@ -15,7 +15,9 @@
   "scripts": {
     "actual-budget-template": "node index.js"
   },
-  "bin": "./index.js",
+  "bin": {
+    "actual-budget-template": "./index.js"
+  },
   "homepage": "https://github.com/bdoherty/actual-budget-template",
   "dependencies": {
     "@actual-app/api": "^1.1.3",
